@@ -1,10 +1,10 @@
 import itertools
 from typing import Mapping, Set
+from cortado_core.subprocess_discovery.subtree_mining.obj import FrequencyCountingStrategy, FrequentActivitySets
 from cortado_core.utils.constants import ARTIFICAL_START_NAME
 from cortado_core.subprocess_discovery.concurrency_trees.cTrees import ConcurrencyTree, cTreeOperator
 from cortado_core.subprocess_discovery.subtree_mining.blanket_mining.cm_tree import CMConcurrencyTree
 from cortado_core.subprocess_discovery.subtree_mining.blanket_mining.cm_tree_pattern import CMTreePattern
-from cortado_core.subprocess_discovery.subtree_mining.freq_counting import FrequencyCountingStrategy, FrequentActivitySets
 from cortado_core.subprocess_discovery.subtree_mining.right_most_path_extension.support_counting import check_min_sup
 from cortado_core.subprocess_discovery.subtree_mining.tree_pattern import TreePattern
 from cortado_core.subprocess_discovery.subtree_mining.treebank import TreeBankEntry
@@ -18,8 +18,7 @@ def _create_operator_leaf_2_pattern(activity : str, operator : cTreeOperator):
 
     tp = CMTreePattern(parent, leaf, 0)
     
-    tp.nInner = 1
-    tp.nLeaf = 1
+    tp.size = 2
     
     return tp
 
@@ -32,9 +31,8 @@ def _create_operator_operator_2_pattern(child_operator : cTreeOperator, parent_o
     
     tp = CMTreePattern(parent, leaf, 0)
     
-    tp.nInner = 2
-    tp.nLeaf = 0
-    
+    tp.size = 2
+ 
     return tp
 
 def _create_occ_list_entries(tid : int, tree : ConcurrencyTree, C2 : Mapping[any, TreePattern], root = False): 

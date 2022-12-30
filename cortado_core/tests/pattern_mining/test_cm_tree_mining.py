@@ -1,21 +1,10 @@
 
 import unittest
-
-from pm4py.objects.log.obj import EventLog, Event, Trace
 from cortado_core.subprocess_discovery.subtree_mining.blanket_mining.cm_grow import cm_min_sub_mining
-from cortado_core.subprocess_discovery.subtree_mining.maximal_connected_components.maximal_connected_check import set_maximaly_closed_patterns
 from cortado_core.subprocess_discovery.subtree_mining.obj import FrequencyCountingStrategy
-from cortado_core.subprocess_discovery.subtree_mining.right_most_path_extension.min_sub_mining import min_sub_mining
 from cortado_core.subprocess_discovery.subtree_mining.treebank import create_treebank_from_cv_variants
-from cortado_core.subprocess_discovery.subtree_mining.utilities import _contains_fallthrough
-from cortado_core.tests.pattern_mining.example_log import create_example_log_1, create_example_log_2
+from cortado_core.tests.pattern_mining.example_log import create_example_log_2
 from cortado_core.utils.cvariants import get_concurrency_variants
-from pm4py.objects.log.importer.xes.importer import apply as xes_import
-from cortado_core.subprocess_discovery.subtree_mining.maximal_connected_components.maximal_connected_check import check_if_valid_tree
-from cortado_core.utils.timestamp_utils import TimeUnit
-
-from pm4py.objects.log.exporter.xes import exporter as xes_exporter
-from pm4py.objects.log.util.sampling import sample_log
 
 l = create_example_log_2()
 variants = get_concurrency_variants(l)

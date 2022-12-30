@@ -1,13 +1,12 @@
-from collections import Counter
-
 from typing import Mapping
 import unittest
 
 from pm4py.objects.log.obj import Trace
 from pm4py.objects.log.util.interval_lifecycle import to_interval
-from cortado_core.subprocess_discovery.subtree_mining.freq_counting import FrequencyCountingStrategy, compute_frequent_activity_sets
-from cortado_core.subprocess_discovery.subtree_mining.obj import FrequentActivitySets
-from cortado_core.subprocess_discovery.subtree_mining.right_most_path_extension.initial_candidate_generation import generate_initial_candidates
+from cortado_core.subprocess_discovery.subtree_mining.ct_frequency_counting import ct_compute_frequent_activity_sets
+from cortado_core.subprocess_discovery.subtree_mining.obj import FrequencyCountingStrategy, FrequentActivitySets
+from cortado_core.experiments.subpattern_eval.Algos.initial_candidate_generation_2_patterns import generate_initial_candidates
+from cortado_core.subprocess_discovery.subtree_mining.three_pattern_candiate_generation import compute_freq3
 from cortado_core.subprocess_discovery.subtree_mining.treebank import create_treebank_from_cv_variants
 from cortado_core.tests.pattern_mining.example_log import create_example_log_1
 
@@ -17,6 +16,9 @@ from cortado_core.utils.timestamp_utils import TimeUnit
 
 l = create_example_log_1()
 
+variants = get_concurrency_variants(l)
+treebank = create_treebank_from_cv_variants(variants, False)
+        
 class FrequencyCounting(unittest.TestCase):
 
     def test_generate_graphs(self): 
@@ -48,11 +50,8 @@ class FrequencyCounting(unittest.TestCase):
         
         strat = FrequencyCountingStrategy.TraceOccurence    
         
-        variants = get_concurrency_variants(l)
+        frequentActivitySet : FrequentActivitySets = ct_compute_frequent_activity_sets(treebank, strat, min_sup = 0)
         
-        frequentActivitySet : FrequentActivitySets = compute_frequent_activity_sets(variants, strat, min_sup = 0)
-        
-        self.assertTrue(frequentActivitySet.fStart == set(['A', 'I', 'H']))
         self.assertTrue(set(frequentActivitySet.dfR['A']) == set(['B', 'D', 'A', 'C']))
         self.assertTrue(set(frequentActivitySet.ccR.keys()) == set(['A', 'D', 'I', 'B', 'G', 'C']))
         self.assertTrue('I' in frequentActivitySet.ccR['B'])
@@ -60,17 +59,14 @@ class FrequencyCounting(unittest.TestCase):
         self.assertTrue(set(frequentActivitySet.ccR['C']) == set(['I', 'G', 'D', 'B']))
         
         self.assertFalse('B' in frequentActivitySet.ccR['A']) # Not in Log 
-        self.assertFalse('A' in frequentActivitySet.fEnd) # Not in Log
-
-        frequentActivitySet : FrequentActivitySets  = compute_frequent_activity_sets(variants, strat, min_sup = 5)
         
-        self.assertTrue(frequentActivitySet.fStart == set(['A']))
+        frequentActivitySet : FrequentActivitySets  = ct_compute_frequent_activity_sets(treebank, strat, min_sup = 5)
+        
         self.assertTrue(set(frequentActivitySet.dfR['A']) == set(['B']) and set(frequentActivitySet.dfR['B']) == set(['C']))
         self.assertTrue(set(frequentActivitySet.ccR.keys()) == set())
         self.assertTrue(set(frequentActivitySet.dfR.keys())  == set(['A', 'B']))
         
         self.assertFalse('D' in frequentActivitySet.dfR['A']) # sup too low
-        self.assertFalse('A' in frequentActivitySet.fEnd) # Not in Log
         
         
     def test_count_frequencies_trace_transaction(self):
@@ -79,14 +75,10 @@ class FrequencyCounting(unittest.TestCase):
         
         strat = FrequencyCountingStrategy.TraceTransaction    
         
-        variants = get_concurrency_variants(l)
+        frequentActivitySet : FrequentActivitySets = ct_compute_frequent_activity_sets(treebank, strat, min_sup = 3)
         
-        frequentActivitySet : FrequentActivitySets = compute_frequent_activity_sets(variants, strat, min_sup = 3)
-        
-        self.assertTrue(frequentActivitySet.fStart == set(['A', 'H']))
         self.assertTrue(set(frequentActivitySet.dfR['A']) == set(['B']))
         self.assertTrue(set(frequentActivitySet.dfR['H']) == set(['B']))
-        self.assertFalse('A' in frequentActivitySet.fEnd) 
         self.assertFalse('B' in set(frequentActivitySet.ccR.keys())) # Sup 3 
         self.assertFalse('G' in set(frequentActivitySet.ccR.keys())) # Sup 3 
         self.assertFalse('G' in frequentActivitySet.dfR['H']) 
@@ -99,18 +91,16 @@ class FrequencyCounting(unittest.TestCase):
         
         strat = FrequencyCountingStrategy.VariantTransaction    
         
-        variants = get_concurrency_variants(l)
-        
-        frequentActivitySet : FrequentActivitySets =  compute_frequent_activity_sets(variants, strat, min_sup = 2)
+        frequentActivitySet : FrequentActivitySets =  ct_compute_frequent_activity_sets(treebank, strat, min_sup = 2)
         
         self.assertTrue(set(frequentActivitySet.dfR['A']) == set(['B', 'C']))
         self.assertTrue(set(frequentActivitySet.ccR.keys()) == set(['B', 'C']))
         self.assertTrue(set(frequentActivitySet.dfR['B']) == set('C'))
         self.assertTrue('H' in frequentActivitySet.dfR) # Appears in 3 variants
         
-        frequentActivitySet : FrequentActivitySets = compute_frequent_activity_sets(variants, strat, min_sup = 7)
+        frequentActivitySet : FrequentActivitySets = ct_compute_frequent_activity_sets(treebank, strat, min_sup = 7)
 
-        self.assertFalse('A' in frequentActivitySet.dfR) # Sup A -> B 7 
+        self.assertFalse('A' in frequentActivitySet.dfR.keys()) # Sup A -> B 7 
         
         
         
@@ -119,30 +109,30 @@ class FrequencyCounting(unittest.TestCase):
         ### Counting Strat
         
         strat = FrequencyCountingStrategy.VariantOccurence    
-        variants = get_concurrency_variants(l)
-        
-        frequentActivitySet : FrequentActivitySets = compute_frequent_activity_sets(variants, strat, min_sup = 2)
+
+        frequentActivitySet : FrequentActivitySets = ct_compute_frequent_activity_sets(treebank, strat, min_sup = 2)
         
         self.assertTrue(set(frequentActivitySet.dfR['A']) == set(['B', 'C']))
         self.assertTrue(set(frequentActivitySet.ccR.keys()) == set(['B', 'C']))
         self.assertTrue(set(frequentActivitySet.dfR['B']) == set('C'))
         self.assertTrue('H' in  frequentActivitySet.dfR) # Appears in 3 Variants
         
-        frequentActivitySet : FrequentActivitySets = compute_frequent_activity_sets(variants, strat, min_sup = 7)
+        frequentActivitySet : FrequentActivitySets = ct_compute_frequent_activity_sets(treebank, strat, min_sup = 6)
 
-        self.assertTrue('A' in frequentActivitySet.dfR) # Sup A -> B 8
+        self.assertTrue('A' in frequentActivitySet.dfR.keys()) # Sup A -> B 8
         
 class InitialCandidateGeneration(unittest.TestCase):
-    
+    l = create_example_log_1()
+
+    variants = get_concurrency_variants(l)
+    treebank = create_treebank_from_cv_variants(variants, False)
+        
     def test_create_candidates_rmo(self):
         
-        strat = FrequencyCountingStrategy.TraceTransaction    
-        variants = get_concurrency_variants(l)
+        strat = FrequencyCountingStrategy.TraceTransaction 
         
-        frequentActivitySet : FrequentActivitySets = compute_frequent_activity_sets(variants, strat, min_sup = 2)
+        frequentActivitySet : FrequentActivitySets = ct_compute_frequent_activity_sets(treebank, strat, min_sup = 2)
         
-        treebank = create_treebank_from_cv_variants(variants, artifical_start = False)
-    
         initial_candidates = generate_initial_candidates(treebank,
                 2,
                 strat, 
@@ -161,3 +151,71 @@ class InitialCandidateGeneration(unittest.TestCase):
         self.assertTrue(candidates_dict['→(B)'] == 10)
         self.assertTrue(candidates_dict['∧(G)'] == 3)
         self.assertTrue(candidates_dict['∧(B)'] == 3)    
+
+class FrequencyCountingInitialCandidatesOfSizeThree(unittest.TestCase): 
+    
+    def test_count_frequencies_trace_occurence(self):
+            
+        ### Counting Strat
+        
+        strat = FrequencyCountingStrategy.TraceOccurence    
+        
+        frequentActivitySet, _ = compute_freq3(treebank, strat, min_sup = 0)
+        
+        self.assertTrue(set(frequentActivitySet.dfR['A']) == set(['B', 'D', 'A', 'C']))
+        self.assertTrue(set(frequentActivitySet.dfR.keys()) == set(['A', 'B', 'C', 'G', 'H']))
+        frequentActivitySet, _  = compute_freq3(treebank, strat, min_sup = 5)
+        
+        self.assertTrue(set(frequentActivitySet.dfR['A']) == set(['B']) and set(frequentActivitySet.dfR['B']) == set(['C']))
+        self.assertTrue(set(frequentActivitySet.dfR.keys())  == set(['A', 'B']))
+        
+        self.assertFalse('D' in frequentActivitySet.dfR['A']) # sup too low
+        
+        
+    def test_count_frequencies_trace_transaction(self):
+        
+        ### Counting Strat
+        
+        strat = FrequencyCountingStrategy.TraceTransaction    
+        
+        frequentActivitySet, _ = compute_freq3(treebank, strat, min_sup = 3)
+        
+        self.assertTrue(set(frequentActivitySet.dfR['A']) == set(['B']))
+        self.assertTrue(set(frequentActivitySet.dfR['H']) == set(['B']))
+        self.assertFalse('G' in frequentActivitySet.dfR['H']) 
+        self.assertFalse('C' in frequentActivitySet.dfR['A']) 
+        
+    def test_count_frequencies_variant_transaction(self):
+            
+        ### Counting Strat
+        
+        strat = FrequencyCountingStrategy.VariantTransaction    
+        
+        frequentActivitySet, _  =  compute_freq3(treebank, strat, min_sup = 2)
+        
+        self.assertTrue(set(frequentActivitySet.dfR['A']) == set(['B', 'C']))
+        self.assertTrue(set(frequentActivitySet.dfR['B']) == set('C'))
+        self.assertTrue('H' in frequentActivitySet.dfR) # Appears in 3 variants
+        
+        frequentActivitySet, _ = compute_freq3(treebank, strat, min_sup = 7)
+
+        self.assertFalse('A' in frequentActivitySet.dfR.keys()) # Sup A -> B 7 
+         
+    def test_count_frequencies_variant_occurence(self):
+            
+        ### Counting Strat
+        
+        strat = FrequencyCountingStrategy.VariantOccurence    
+
+        frequentActivitySet, _ = compute_freq3(treebank, strat, min_sup = 2)
+        
+        self.assertTrue(set(frequentActivitySet.dfR['A']) == set(['B', 'C']))
+        self.assertTrue(set(frequentActivitySet.dfR['B']) == set('C'))
+        self.assertTrue('H' in  frequentActivitySet.dfR) # Appears in 3 Variants
+        
+        frequentActivitySet, _ = compute_freq3(treebank, strat, min_sup = 6)
+
+        self.assertTrue('A' in frequentActivitySet.dfR.keys()) # Sup A -> B 8
+        
+if __name__ == '__main__':     
+    unittest.main()

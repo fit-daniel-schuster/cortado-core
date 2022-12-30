@@ -4,9 +4,10 @@ from cortado_core.subprocess_discovery.subtree_mining.blanket_mining.compute_roo
     check_root_occurence_blanket,
 )
 from cortado_core.subprocess_discovery.subtree_mining.ct_frequency_counting import ct_compute_frequent_activity_sets
-from cortado_core.subprocess_discovery.subtree_mining.obj import PruningSets
+from cortado_core.subprocess_discovery.subtree_mining.obj import FrequencyCountingStrategy, PruningSets
 from cortado_core.subprocess_discovery.subtree_mining.tree_pruning import (
-    compute_f3_pruned_set,
+    _get_prune_sets,
+    compute_f3_pruned_set_2_patterns,
 )
 from cortado_core.subprocess_discovery.subtree_mining.treebank import TreeBankEntry
 from cortado_core.subprocess_discovery.subtree_mining.utilities import (
@@ -32,11 +33,7 @@ from cortado_core.subprocess_discovery.subtree_mining.blanket_mining.compute_tra
 from cortado_core.subprocess_discovery.subtree_mining.blanket_mining.create_initial_candidates import (
     generate_initial_candidates,
 )
-from cortado_core.subprocess_discovery.subtree_mining.freq_counting import (
-    FrequencyCountingStrategy,
-    _get_prune_sets,
-)
-from cortado_core.utils.split_graph import Group
+
 from cortado_core.subprocess_discovery.subtree_mining.folding_label import fold_loops
 
 
@@ -96,7 +93,7 @@ def cm_min_sub_mining(
             break
 
         if k == 0: 
-            pSets, C = compute_f3_pruned_set(pSets, C)
+            pSets, C = compute_f3_pruned_set_2_patterns(pSets, C)
             skipPrune = False
 
     return k_pattern
@@ -159,229 +156,3 @@ def cm_grow(
                    tp.maximal = True               
 
     return E
-
-if __name__ == "__main__":
-
-    from pm4py.objects.log.importer.xes.importer import apply as xes_import
-    from cortado_core.utils.cvariants import get_concurrency_variants
-    from cortado_core.subprocess_discovery.subtree_mining.treebank import (
-        create_treebank_from_cv_variants,
-    )
-    from cortado_core.subprocess_discovery.subtree_mining.blanket_mining.cm_grow import (
-        cm_min_sub_mining,
-    )
-    from cortado_core.subprocess_discovery.subtree_mining.maximal_connected_components.maximal_connected_check import (
-        check_if_valid_tree,
-        set_maximaly_closed_patterns,
-    )
-    from cortado_core.experiments.subpattern_eval.Algos.asai_performance import (
-        min_sub_mining_asai,
-    )
-    
-    from cortado_core.utils.timestamp_utils import TimeUnit
-
-    freq_strat = FrequencyCountingStrategy.TraceTransaction
-
-    l = xes_import("C:\\Users\\Michael\\Desktop\\Sepsis Cases - Event Log.xes")
-    art_start = False
-    variants = get_concurrency_variants(l, False, TimeUnit.MS)
-    
-    treebank = create_treebank_from_cv_variants(variants, artifical_start=art_start)
-    min_sup = 20
-    k = 100 
-    
-    print(min_sup)
-    
-    cm_k_patterns = cm_min_sub_mining(
-        treebank,
-        frequency_counting_strat=freq_strat,
-        k_it=k,
-        min_sup=min_sup,
-    )
-
-    print()
-    print("Setting CM Closed")
-    set_maximaly_closed_patterns(cm_k_patterns)
-
-    rmo_k_patterns, _ = min_sub_mining_asai(
-        treebank,
-        frequency_counting_strat=freq_strat,
-        k_it=k,
-        min_sup=min_sup,
-    )
-
-    print()
-    print("Setting RMO Closed")
-    set_maximaly_closed_patterns(rmo_k_patterns)
-
-    print()
-    print(
-        "Closed RMO",
-        sum(
-            [
-                len(
-                    [
-                        pattern
-                        for pattern in patterns
-                        if pattern.closed and check_if_valid_tree(pattern.tree)
-                    ]
-                )
-                for patterns in rmo_k_patterns.values()
-            ]
-        ),
-    )
-    print(
-        "Maximal RMO",
-        sum(
-            [
-                len(
-                    [
-                        pattern
-                        for pattern in patterns
-                        if pattern.maximal and check_if_valid_tree(pattern.tree)
-                    ]
-                )
-                for patterns in rmo_k_patterns.values()
-            ]
-        ),
-    )
-    print()
-    print(
-        "Closed CM",
-        sum(
-            [
-                len(
-                    [
-                        pattern
-                        for pattern in patterns
-                        if pattern.closed and check_if_valid_tree(pattern.tree)
-                    ]
-                )
-                for patterns in cm_k_patterns.values()
-            ]
-        ),
-    )
-    print(
-        "Maximal CM",
-        sum(
-            [
-                len(
-                    [
-                        pattern
-                        for pattern in patterns
-                        if pattern.maximal and check_if_valid_tree(pattern.tree)
-                    ]
-                )
-                for patterns in cm_k_patterns.values()
-            ]
-        ),
-    )
-
-    print()
-
-    rm_k_patterns_nested = {
-        k: {str(pattern): pattern for pattern in patterns}
-        for k, patterns in rmo_k_patterns.items()
-    }
-    cm_k_patterns_nested = {
-        k: {str(pattern): pattern for pattern in patterns}
-        for k, patterns in cm_k_patterns.items()
-    }
-
-    for k in cm_k_patterns_nested.keys():
-
-        print()
-        print("K:", k)
-        print("Total:", "RMO:", len(rmo_k_patterns[k]), "CM:", len(cm_k_patterns[k]))
-        print(
-            "Closed:",
-            "RMO:",
-            len(
-                [
-                    pattern
-                    for pattern in rmo_k_patterns[k]
-                    if pattern.closed and check_if_valid_tree(pattern.tree)
-                ]
-            ),
-            "CM:",
-            len(
-                [
-                    pattern
-                    for pattern in cm_k_patterns[k]
-                    if pattern.closed and check_if_valid_tree(pattern.tree)
-                ]
-            ),
-        )
-        print(
-            "Maxmial:",
-            "RMO:",
-            len(
-                [
-                    pattern
-                    for pattern in rmo_k_patterns[k]
-                    if pattern.maximal and check_if_valid_tree(pattern.tree)
-                ]
-            ),
-            "CM:",
-            len(
-                [
-                    pattern
-                    for pattern in cm_k_patterns[k]
-                    if pattern.maximal and check_if_valid_tree(pattern.tree)
-                ]
-            ),
-        )
-
-        patterns_rmo = set(rm_k_patterns_nested[k].keys())
-        patterns_cm = set(cm_k_patterns_nested[k].keys())
-
-        print()
-        print("Intersection")
-        for pattern in patterns_cm.intersection(patterns_rmo):
-
-            if check_if_valid_tree(rm_k_patterns_nested[k][pattern].tree):
-                if (
-                    rm_k_patterns_nested[k][pattern].closed
-                    != cm_k_patterns_nested[k][pattern].closed
-                ):
-                    print(
-                        pattern,
-                        "Closed RMO",
-                        rm_k_patterns_nested[k][pattern].closed,
-                        "Closed CM",
-                        cm_k_patterns_nested[k][pattern].closed,
-                    )
-
-                    print(pattern)
-                    print(repr(rm_k_patterns_nested[k][pattern].tree))
-
-                if (
-                    rm_k_patterns_nested[k][pattern].maximal
-                    != cm_k_patterns_nested[k][pattern].maximal
-                ):
-                    print(
-                        pattern,
-                        "Maximal RMO",
-                        rm_k_patterns_nested[k][pattern].maximal,
-                        "Maximal CM",
-                        cm_k_patterns_nested[k][pattern].maximal,
-                    )
-
-        print()
-        print("Only in RMO")
-        for pattern in patterns_rmo.difference(patterns_cm):
-            if check_if_valid_tree(rm_k_patterns_nested[k][pattern].tree):
-                if (
-                    rm_k_patterns_nested[k][pattern].closed
-                    or rm_k_patterns_nested[k][pattern].maximal
-                ):
-                    print(
-                        pattern,
-                        "Closed RMO",
-                        rm_k_patterns_nested[k][pattern].closed,
-                        "Maximal RMO",
-                        rm_k_patterns_nested[k][pattern].maximal,
-                    )
-
-    if patterns_cm.difference(patterns_rmo):
-        print("CM has pattern not in RMO")

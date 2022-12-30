@@ -1,8 +1,6 @@
 
 from typing import Set
 from cortado_core.subprocess_discovery.concurrency_trees.cTrees import ConcurrencyTree, cTreeOperator
-from cortado_core.subprocess_discovery.subtree_mining.freq_counting import FrequentActivitySets
-
 
 def _foldUnaryLoops(tree : ConcurrencyTree, lmd : int) -> Set[str]  : 
     

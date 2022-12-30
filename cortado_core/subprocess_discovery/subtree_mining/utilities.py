@@ -2,10 +2,7 @@
 from typing import List, Mapping, Tuple
 import operator
 from cortado_core.subprocess_discovery.concurrency_trees.cTrees import ConcurrencyTree, cTreeOperator
-from cortado_core.subprocess_discovery.subtree_mining.freq_counting import FrequencyCountingStrategy
-
-
-
+from cortado_core.subprocess_discovery.subtree_mining.obj import FrequencyCountingStrategy
 
 def flatten(t):
     """
@@ -28,6 +25,8 @@ def get_child_labels(children):
 def _compute_unique_roots(rmo_entries : Tuple[int, ConcurrencyTree]) -> int:
     return len(set(map(operator.itemgetter(0), rmo_entries)))
 
+def _getLabel(child : ConcurrencyTree): 
+    return child.label or child.op 
 
 def _isTransactionSetting(strategy : FrequencyCountingStrategy):
     return strategy == FrequencyCountingStrategy.VariantTransaction or strategy == FrequencyCountingStrategy.TraceTransaction

@@ -3,11 +3,9 @@ import itertools
 
 from typing import Mapping
 from cortado_core.subprocess_discovery.concurrency_trees.cTrees import ConcurrencyTree, cTreeOperator
-from cortado_core.subprocess_discovery.subtree_mining.freq_counting import FrequencyCountingStrategy, compute_frequent_activity_sets
-from cortado_core.subprocess_discovery.subtree_mining.obj import FrequentActivitySets
+from cortado_core.subprocess_discovery.subtree_mining.obj import FrequencyCountingStrategy, FrequentActivitySets
 from cortado_core.subprocess_discovery.subtree_mining.treebank import TreeBankEntry
-
-
+from cortado_core.tests.vql.query_example_log import create_example_log_1
 
 def count_activites_in_tree(tree : ConcurrencyTree): 
     
@@ -182,84 +180,7 @@ def ct_compute_frequent_activity_sets(treebank : Mapping[int, TreeBankEntry], fr
 
     return FrequentActivitySets(
         fA=frequent_activities,
-        fStart=set(),
-        fEnd=set(),
         dfR=frequent_df_relations,
         efR=frequent_ef_relations,
         ccR=frequent_cc_relations,
     )  
-    
-if __name__ == "__main__":
-    from pm4py.objects.log.importer.xes.importer import apply as xes_import
-    from cortado_core.utils.cvariants import get_concurrency_variants
-    from cortado_core.subprocess_discovery.subtree_mining.treebank import (
-        create_treebank_from_cv_variants,
-    )
-    from cortado_core.subprocess_discovery.subtree_mining.maximal_connected_components.maximal_connected_check import (
-        check_if_valid_tree,
-        set_maximaly_closed_patterns,
-    )
-    from cortado_core.experiments.subpattern_eval.Algos.asai_performance import (
-        min_sub_mining_asai,
-    )
-    
-    from cortado_core.utils.timestamp_utils import TimeUnit
-    import timeit
-    
-    from cortado_core.subprocess_discovery.subtree_mining.blanket_mining.cm_grow import cm_min_sub_mining 
-     
-    # l = xes_import("C:\\Users\\Michael\\Desktop\\reducedBPI2012.xes")
-    l = create_example_log_2()
-    
-    art_start = False
-
-    variants = get_concurrency_variants(l, False, TimeUnit.MS)
-    treebank = create_treebank_from_cv_variants(variants, artifical_start=art_start)
-
-    min_sup = 1
-    k = 100 
-
-    print(min_sup)
-
-    freq_strat = FrequencyCountingStrategy.TraceTransaction
-    
-    start = timeit.default_timer()
-    for entry in treebank.values(): 
-        count_activites_in_tree(entry.tree)
-    print(timeit.default_timer()-start)
-    
-    start = timeit.default_timer()
-    fSet_tree = ct_compute_frequent_activity_sets(treebank, freq_strat=freq_strat, min_sup= min_sup)
-    print(timeit.default_timer()-start)
-    
-    start = timeit.default_timer()
-    fSet_graph = compute_frequent_activity_sets(variants, freq_strat, min_sup)
-    print(timeit.default_timer() - start)
-    
-    
-    
-    print()
-    print('Tree')
-    for act in fSet_tree.fA: 
-        print(act)
-    
-    print()
-    print('Graph')
-    for act in fSet_graph.fA: 
-        print(act)
-    
-    print()
-    print('Difference')
-    for act in fSet_tree.fA.symmetric_difference( fSet_graph.fA): 
-        print(act)
-        
-    print()
-    print('Tree')
-    for act, follows in fSet_tree.dfR.items(): 
-        print(act, follows)
-    
-    print()
-    print('Graph')
-    for act, follows in fSet_graph.dfR.items(): 
-        print(act, follows)
-    

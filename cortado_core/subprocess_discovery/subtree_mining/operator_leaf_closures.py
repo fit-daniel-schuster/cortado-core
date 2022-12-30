@@ -1,7 +1,6 @@
 from typing import Iterable
 from cortado_core.subprocess_discovery.concurrency_trees.cTrees import ConcurrencyTree, cTreeOperator
 
-
 def _computeSeqOperatorClosure(
     node: ConcurrencyTree, dfR, efR, rmc=False
 ) -> Iterable[str]:
@@ -56,30 +55,5 @@ def _computeSeqOperatorClosure(
 
     else:
         labels = labels.intersection(_computeSeqOperatorClosure(node.children[-1], dfR, efR, rmc))
-
-    return labels
-
-
-def _computeConOperatorClosure(node: ConcurrencyTree, ccR) -> Iterable[str]:
-
-    first_child = node.children[0]
-
-    if first_child.label:
-        labels = set(ccR.get(first_child.label, []))
-
-    else:
-        labels = _computeConOperatorClosure(first_child, ccR)
-
-    for child in node.children[1:]:
-
-        if child.label:
-
-            labels = labels.intersection(ccR.get(child.label, []))
-
-        else:
-            labels = labels.intersection(_computeConOperatorClosure(child, ccR))
-
-        if not labels:
-            break
 
     return labels

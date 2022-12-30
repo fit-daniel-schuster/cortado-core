@@ -2,16 +2,11 @@
 import unittest
 from cortado_core.subprocess_discovery.subtree_mining.blanket_mining.cm_grow import cm_min_sub_mining
 from cortado_core.subprocess_discovery.subtree_mining.blanket_mining.compute_occurence_blanket import check_occ_blanket
+from cortado_core.subprocess_discovery.subtree_mining.obj import FrequencyCountingStrategy
 
-from cortado_core.subprocess_discovery.subtree_mining.freq_counting import FrequencyCountingStrategy
-from cortado_core.subprocess_discovery.subtree_mining.maximal_connected_components.maximal_connected_check import set_maximaly_closed_patterns
-from cortado_core.subprocess_discovery.subtree_mining.right_most_path_extension.min_sub_mining import min_sub_mining
 from cortado_core.subprocess_discovery.subtree_mining.treebank import create_treebank_from_cv_variants
-from cortado_core.tests.pattern_mining.example_log import create_example_log_1, create_example_log_2
+from cortado_core.tests.pattern_mining.example_log import create_example_log_1
 from cortado_core.utils.cvariants import get_concurrency_variants
-from pm4py.objects.log.importer.xes.importer import apply as xes_import
-from cortado_core.subprocess_discovery.subtree_mining.maximal_connected_components.maximal_connected_check import check_if_valid_tree
-from cortado_core.utils.timestamp_utils import TimeUnit
 
 l = create_example_log_1()
 variants = get_concurrency_variants(l)

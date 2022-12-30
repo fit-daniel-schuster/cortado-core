@@ -23,7 +23,7 @@ def subpattern_confidence(tp : TreePattern, tp_support : Mapping[str, int]):
     """
     
     # No inforamtion for pattern of Size 2
-    if (tp.nInner + tp.nLeaf) == 2 or not check_if_valid_tree(tp.tree): 
+    if tp.size == 2 or not check_if_valid_tree(tp.tree): 
         return None
     
     sub_patterns = []
@@ -64,7 +64,7 @@ def cross_support_confidence(tp : TreePattern, tp_support : Mapping[str, int]):
     """
     sub_patterns = compute_all_valid_substrings(tp.tree)
     
-    if (tp.nInner + tp.nLeaf) == 2: 
+    if tp.size == 2: 
         return None
     
     support_sub = []

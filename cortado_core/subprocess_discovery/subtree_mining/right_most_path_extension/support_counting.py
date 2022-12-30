@@ -1,6 +1,6 @@
 
 from typing import Mapping
-from cortado_core.subprocess_discovery.subtree_mining.freq_counting import FrequencyCountingStrategy
+from cortado_core.subprocess_discovery.subtree_mining.obj import FrequencyCountingStrategy
 from cortado_core.subprocess_discovery.subtree_mining.tree_pattern import TreePattern
 from cortado_core.subprocess_discovery.subtree_mining.treebank import TreeBankEntry
 from cortado_core.subprocess_discovery.subtree_mining.utilities import _compute_unique_roots

@@ -12,9 +12,7 @@ from cortado_core.subprocess_discovery.subtree_mining.blanket_mining.cm_tree imp
 from cortado_core.subprocess_discovery.subtree_mining.blanket_mining.cm_tree_pattern import (
     CMTreePattern,
 )
-from cortado_core.subprocess_discovery.subtree_mining.freq_counting import (
-    FrequencyCountingStrategy,
-)
+from cortado_core.subprocess_discovery.subtree_mining.obj import FrequencyCountingStrategy
 from cortado_core.subprocess_discovery.subtree_mining.treebank import TreeBankEntry
 from cortado_core.subprocess_discovery.subtree_mining.utilities import (
     _update_subToGain,

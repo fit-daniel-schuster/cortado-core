@@ -778,8 +778,3 @@ def create_example_log_fallthrough():
     return l 
     
 import pm4py
-
-if __name__ == "__main__":    
-    log = create_example_log_fallthrough()
-    print('Writing log')
-    pm4py.write_xes(log, 'C:\\Users\\Michael\\Desktop\\fallthrough.xes')

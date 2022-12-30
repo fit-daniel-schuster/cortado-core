@@ -37,12 +37,10 @@ def check_maximality_closed_patterns(tp, k, level_to_go):
         
         
         eSubtrees = []
-        pSubtrees = []
         tSubtrees = [] 
          
         if isinstance(tp, CMTreePattern):
             
-            #pSubtrees += _compute_left_out_subtree_strings(tp.tree)
             eSubtrees += [(k-1, sub) for sub in _compute_left_most_path_eliminated_leafs(tp.tree)]
             eSubtrees += [(k-1, sub) for sub in _compute_right_most_path_eliminated_leafs(tp.tree)]
             
@@ -73,15 +71,6 @@ def check_maximality_closed_patterns(tp, k, level_to_go):
                 print(level, sub)
                 for s in level_to_go[level]: 
                     print(s)
-                
-        for level, sub in pSubtrees:
-    
-            if sub in level_to_go[level]:
-                ancestor = level_to_go[level][sub]
-                ancestor.maximal = False
-
-                if tp.support >= ancestor.support:
-                    ancestor.closed = False 
    
         for level, sub in tSubtrees:
             
