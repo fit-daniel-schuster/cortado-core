@@ -21,7 +21,7 @@ setup(
         'cycler',
         'antlr4-python3-runtime==4.8',
         'networkx==3.0rc1',
-        'pm4py @ git+https://gitlab.fit.fraunhofer.de/pm4py/pm4py-core.git@c169a7ff05cb6c0b7dcde681e372c4ad41d1c363#egg=pm4py',
+        'pm4py==2.2.16',
         'ortools',
         'tqdm==4.64.1'
     ],
